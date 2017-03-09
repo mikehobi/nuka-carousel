@@ -70,6 +70,7 @@ const Carousel = React.createClass({
     frameOverflow: React.PropTypes.string,
     initialSlideHeight: React.PropTypes.number,
     initialSlideWidth: React.PropTypes.number,
+    minimumSwipeDistance: React.PropTypes.number,
     slideIndex: React.PropTypes.number,
     slidesToShow: React.PropTypes.number,
     slidesToScroll: React.PropTypes.oneOfType([
@@ -376,7 +377,9 @@ const Carousel = React.createClass({
       slidesToShow = this.state.slidesToScroll;
     }
 
-    if (this.touchObject.length > (this.state.slideWidth / slidesToShow) / 5) {
+    var minimumSwipeDistance = this.props.minimumSwipeDistance || ((this.state.slideWidth / slidesToShow) / 5)
+
+    if (this.touchObject.length > minimumSwipeDistance) {
       if (this.touchObject.direction === 1) {
         if (
           this.state.currentSlide >= React.Children.count(this.props.children) - slidesToShow &&
