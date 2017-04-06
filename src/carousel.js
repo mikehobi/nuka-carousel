@@ -82,6 +82,7 @@ const Carousel = React.createClass({
       React.PropTypes.number
     ]),
     speed: React.PropTypes.number,
+    startThreshold: React.PropTypes.number,
     swiping: React.PropTypes.bool,
     vertical: React.PropTypes.bool,
     width: React.PropTypes.string,
@@ -108,6 +109,7 @@ const Carousel = React.createClass({
       slidesToShow: 1,
       slideWidth: 1,
       speed: 500,
+      startThreshold: 2,
       swiping: true,
       vertical: false,
       width: '100%',
@@ -221,7 +223,8 @@ const Carousel = React.createClass({
       onTouchStart(e) {
         self.touchObject = {
           startX: e.touches[0].pageX,
-          startY: e.touches[0].pageY
+          startY: e.touches[0].pageY,
+          isActive: false
         }
         self.handleMouseOver();
       },
@@ -233,8 +236,18 @@ const Carousel = React.createClass({
           e.touches[0].pageY
         );
 
+        // should be 1 or -1
         if (direction !== 0) {
           e.preventDefault();
+        }
+
+        if (!self.touchObject.isActive) {
+          var dy = Math.round(Math.sqrt(Math.pow(e.touches[0].pageY - self.touchObject.startY, 2)))
+          var dx = Math.round(Math.sqrt(Math.pow(e.touches[0].pageX - self.touchObject.startX, 2)))
+
+          if ((!self.props.vertical && dx < self.props.startThreshold * dy) || (self.props.vertical && dy < self.props.startThreshold * dx)) {
+            return
+          }
         }
 
         var length = self.props.vertical ? Math.round(Math.sqrt(Math.pow(e.touches[0].pageY - self.touchObject.startY, 2)))
@@ -246,13 +259,16 @@ const Carousel = React.createClass({
           endX: e.touches[0].pageX,
           endY: e.touches[0].pageY,
           length: length,
-          direction: direction
+          direction: direction,
+          isActive: true
         }
 
-        self.setState({
-          left: self.props.vertical ? 0 : self.getTargetLeft(self.touchObject.length * self.touchObject.direction),
-          top: self.props.vertical ? self.getTargetLeft(self.touchObject.length * self.touchObject.direction) : 0
-        });
+        if (self.props.vertical) {
+          self.setState({top: self.getTargetLeft(self.touchObject.length * self.touchObject.direction)});
+        }
+        else {
+          self.setState({left: self.getTargetLeft(self.touchObject.length * self.touchObject.direction)});
+        }
       },
       onTouchEnd(e) {
         self.handleSwipe(e);
