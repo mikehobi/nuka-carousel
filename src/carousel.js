@@ -70,6 +70,7 @@ const Carousel = React.createClass({
     frameOverflow: React.PropTypes.string,
     initialSlideHeight: React.PropTypes.number,
     initialSlideWidth: React.PropTypes.number,
+    maxTouches: React.PropTypes.number,
     minimumSwipeDistance: React.PropTypes.number,
     slideIndex: React.PropTypes.number,
     slidesToShow: React.PropTypes.number,
@@ -82,7 +83,6 @@ const Carousel = React.createClass({
       React.PropTypes.number
     ]),
     speed: React.PropTypes.number,
-    startThreshold: React.PropTypes.number,
     swiping: React.PropTypes.bool,
     vertical: React.PropTypes.bool,
     width: React.PropTypes.string,
@@ -109,7 +109,6 @@ const Carousel = React.createClass({
       slidesToShow: 1,
       slideWidth: 1,
       speed: 500,
-      startThreshold: 2,
       swiping: true,
       vertical: false,
       width: '100%',
@@ -221,14 +220,19 @@ const Carousel = React.createClass({
 
     return {
       onTouchStart(e) {
+        if (self.props.maxTouches && e.touches.length > self.props.maxTouches) {
+          return
+        }
         self.touchObject = {
           startX: e.touches[0].pageX,
-          startY: e.touches[0].pageY,
-          isActive: false
+          startY: e.touches[0].pageY
         }
         self.handleMouseOver();
       },
       onTouchMove(e) {
+        if (self.props.maxTouches && e.touches.length > self.props.maxTouches) {
+          return
+        }
         var direction = self.swipeDirection(
           self.touchObject.startX,
           e.touches[0].pageX,
@@ -236,18 +240,8 @@ const Carousel = React.createClass({
           e.touches[0].pageY
         );
 
-        // should be 1 or -1
         if (direction !== 0) {
           e.preventDefault();
-        }
-
-        if (!self.touchObject.isActive) {
-          var dy = Math.round(Math.sqrt(Math.pow(e.touches[0].pageY - self.touchObject.startY, 2)))
-          var dx = Math.round(Math.sqrt(Math.pow(e.touches[0].pageX - self.touchObject.startX, 2)))
-
-          if ((!self.props.vertical && dx < self.props.startThreshold * dy) || (self.props.vertical && dy < self.props.startThreshold * dx)) {
-            return
-          }
         }
 
         var length = self.props.vertical ? Math.round(Math.sqrt(Math.pow(e.touches[0].pageY - self.touchObject.startY, 2)))
@@ -259,16 +253,13 @@ const Carousel = React.createClass({
           endX: e.touches[0].pageX,
           endY: e.touches[0].pageY,
           length: length,
-          direction: direction,
-          isActive: true
+          direction: direction
         }
 
-        if (self.props.vertical) {
-          self.setState({top: self.getTargetLeft(self.touchObject.length * self.touchObject.direction)});
-        }
-        else {
-          self.setState({left: self.getTargetLeft(self.touchObject.length * self.touchObject.direction)});
-        }
+        self.setState({
+          left: self.props.vertical ? 0 : self.getTargetLeft(self.touchObject.length * self.touchObject.direction),
+          top: self.props.vertical ? self.getTargetLeft(self.touchObject.length * self.touchObject.direction) : 0
+        });
       },
       onTouchEnd(e) {
         self.handleSwipe(e);
