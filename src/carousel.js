@@ -70,6 +70,7 @@ const Carousel = React.createClass({
     frameOverflow: React.PropTypes.string,
     initialSlideHeight: React.PropTypes.number,
     initialSlideWidth: React.PropTypes.number,
+    maxTouches: React.PropTypes.number,
     minimumSwipeDistance: React.PropTypes.number,
     slideIndex: React.PropTypes.number,
     slidesToShow: React.PropTypes.number,
@@ -221,6 +222,9 @@ const Carousel = React.createClass({
 
     return {
       onTouchStart(e) {
+        if (self.props.maxTouches && e.touches.length > self.props.maxTouches) {
+          return
+        }
         self.touchObject = {
           startX: e.touches[0].pageX,
           startY: e.touches[0].pageY,
@@ -229,6 +233,9 @@ const Carousel = React.createClass({
         self.handleMouseOver();
       },
       onTouchMove(e) {
+        if (self.props.maxTouches && e.touches.length > self.props.maxTouches) {
+          return
+        }
         var direction = self.swipeDirection(
           self.touchObject.startX,
           e.touches[0].pageX,
